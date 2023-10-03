@@ -24,6 +24,11 @@ import getpass
 # print(Style.RESET_ALL)
 # import addUser
 # addUser.addUser()
-user = input(Fore.WHITE + 'Running this script as: ')
-echo_password = getpass.getpass(prompt='Enter your echo password: ')
+#user = input(Fore.WHITE + 'Running this script as: ')
+#echo_password = getpass.getpass(prompt='Enter your echo password: ')
 
+# 3. Linux Security
+# 3.3 Boot options
+# 3.3.3 Grub
+from verifyBootGrub import verifyBootGrub
+verifyBootGrub()
