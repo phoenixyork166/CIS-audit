@@ -32,3 +32,11 @@ import getpass
 # 3.3.3 Grub
 from verifyBootGrub import verifyBootGrub
 verifyBootGrub()
+
+# 3.9 Security Features in the Kernel
+# 3.9.1 Enable TCP SYN Cookie Protection (default in SUSE Linux Enterprise Server11)
+# 3.9.1.1 Verify TCP SYNC Cookie Protection is Enabled
+# config = cat /etc/sysctl.conf | egrep '^\s*net\.ipv4\.tcp\_syncookies\s*=\s*(\d*)\s*'
+from verifyTcpSyncCookies import verifyTcpSyncCookies
+verifyTcpSyncCookies()
+

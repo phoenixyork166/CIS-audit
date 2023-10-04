@@ -11,6 +11,7 @@ import re
 def verifyBootGrub():
     confirm = input(Fore.WHITE + "\n[x] Do you wanna harden 3.3.3 Boot Options for either of following: \n/boot/grub/grub.cfg\n/boot/grub2/grub.cfg\n/boot/grub/menu.lst\n[x] [y/N]: ")
     if confirm.lower() == "y":
+        print(Fore.WHITE + "\nProceeding...\n")
         user = input(Fore.WHITE + "Running this script as: ")    
         sudo_password = getpass.getpass(prompt='Enter sudo password: ')
         
