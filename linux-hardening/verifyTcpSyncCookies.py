@@ -17,7 +17,7 @@ import re
 # config = cat /etc/sysctl.conf | egrep '^net.ipv4.tcp\_syncookies'
 
 def verifyTcpSyncCookies():
-    confirm = input(Fore.WHITE + "\n[x] Do you wanna harden 3.9.1.1 TCP Sync Cookies Protection in /etc/sysctl.conf[x] [y/N]: ")
+    confirm = input(Fore.WHITE + "\n[x] Do you wanna check 3.9.1.1 TCP Sync Cookies Protection in /etc/sysctl.conf[x] [y/N]: ")
     if confirm.lower() == "y":
         print(Fore.WHITE + "\nProceeding...\n")
         user = input(Fore.WHITE + "Running this script as: ")    
@@ -56,6 +56,8 @@ def verifyTcpSyncCookies():
                     print(Fore.YELLOW + "\nCurrent value is: \n")
                     print(output)
                     print(Fore.YELLOW + "\nCurrent net.ipv4.tcp_syncookies value is NOT compliant...\nProceeding...\n")
+
+
             else:
                 print(Fore.RED + "\nFailed to check current net.ipv4.tcp_syncookies config...\nMake sure you're running this script as root & try again...\n")
 

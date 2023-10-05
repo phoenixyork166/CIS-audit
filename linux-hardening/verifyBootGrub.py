@@ -30,51 +30,64 @@ def verifyBootGrub():
         doLsGrub.wait()
 
         if doLsGrub.returncode == 0:
-            print(Fore.YELLOW + "\ngrub.cfg exists in /boot/grub/\n\nProceeding to hardening /boot/grub/grub.cfg...\n")
-            ## chmod 600 /boot/grub/grub.cfg
-            grubChmod600 = f'echo {sudo_password} | sudo chmod 600 {grubConfPath}'
-            doGrubChmod600 = subprocess.Popen(grubChmod600, shell=True, text=True)
-            doGrubChmod600.wait()
+            print(Fore.YELLOW + "\ngrub.cfg exists in /boot/grub/\n\nProceeding to checking current config...\n")
+            check = f'echo {sudo_password} | sudo ls -la {grubPath} | grep {grubCfgName} | awk \'{{print $1,$2,$3,$4}}\''
+            doCheck = subprocess.run(check, shell=True, text=True, capture_output=True)
+            #print(doCheck.stdout)
+            # Store output from doCheck stdout
+            output = doCheck.stdout
+            # Trim whitespace
+            output = output.strip()
+            print(output)
 
-            if doGrubChmod600.returncode == 0:
-                print(Fore.YELLOW + "\nchmod 600 /boot/grub/grub.cfg has succeeded!\nProceeding to chown root /boot/grub/grub.cfg\n")
-                ## chown root /boot/grub/grub.cfg
-                grubChown = f'echo {sudo_password} | sudo chown root {grubConfPath}'
-                doGrubChown = subprocess.Popen(grubChown, shell=True, text=True)
-                doGrubChown.wait()
+            validate = re.search(regex, output)
+            print(validate)
+            
+            print(Fore.YELLOW + "\nComparing current config to desired config...\n")
+            
+            if not validate:
+                print(Fore.RED + "\nCurrent config is NOT compliant...\nProceeding to hardening...\n")
+                ##
+                print(Fore.YELLOW + "\nchmod 600 /boot/grub/grub.cfg in progress...\n")
+                grubChmod600 = f'echo {sudo_password} | sudo chmod 600 {grubConfPath}'
+                doGrubChmod600 = subprocess.Popen(grubChmod600, shell=True, text=True)
+                doGrubChmod600.wait()
 
-                if doGrubChown.returncode == 0:
-                    print(Fore.YELLOW + "\nchown root /boot/grub/grub.cfg has succeeded!\nProceeding to chgrp root /boot/grub/grub.cfg\n")
-                    ### chgrp root /boot/grub/grub.cfg
-                    grubChgrp = f'echo {sudo_password} | sudo chgrp root {grubConfPath}'
-                    doGrubChgrp = subprocess.Popen(grubChgrp, shell=True, text=True)
-                    doGrubChgrp.wait()
+                if doGrubChmod600.returncode == 0:
+                    print(Fore.YELLOW + "\nchmod 600 /boot/grub/grub.cfg has succeeded!\nProceeding to chown root /boot/grub/grub.cfg ...\n")
+                    grubChown = f'echo {sudo_password} | sudo chown root {grubConfPath}'
+                    doGrubChown = subprocess.Popen(grubChown, shell=True, text=True)
+                    doGrubChown.wait()
 
-                    if doGrubChgrp.returncode == 0:
-                        print(Fore.YELLOW + "\nchgrp root /boot/grub/grub.cfg has succeeded!\nProceeding to verify latest permissions for /boot/grub/grub.cfg: ")
-                        ##
-                        print(Fore.YELLOW + "\nLatest /boot/grub/grub.cfg permissions are: ")
-                        #newPermission = os.system('ls -la /boot/grub/ | grep grub.cfg | awk \'{{print $1,$2,$3,$4}}\''.format(user))
-                        readPermission = f'echo {sudo_password} | sudo ls -la {grubPath} | grep {grubCfgName} | awk \'{{print $1,$2,$3,$4}}\''
-                        doReadPermission = subprocess.run(readPermission, shell=True, text=True, capture_output=True)
-                        print(doReadPermission.stdout)
+                    if doGrubChown.returncode == 0:
+                        print(Fore.YELLOW + "\nchown root /boot/grub/grub.cfg has succeeded!\nProceeding to chgrp root /boot/grub/grub.cfg\n")
+                        grubChgrp = f'echo {sudo_password} | sudo chgrp root {grubConfPath}'
+                        doGrubChgrp = subprocess.Popen(grubChgrp, shell=True, text=True)
+                        doGrubChgrp.wait()
+
+                        if doGrubChgrp.returncode == 0:
+                            print(Fore.YELLOW + "\nchgrp root /boot/grub/grub.cfg has succeeded!\nProceeding to verify latest permissions for /boot/grub/grub.cfg: ")
+                            print(Fore.YELLOW + "\nLatest /boot/grub/grub.cfg permissions are: ")
+                            readPermission = f'echo {sudo_password} | sudo ls -la {grubPath} | grep {grubCfgName} | awk \'{{print $1,$2,$3,$4}}\''
+                            doReadPermission = subprocess.run(readPermission, shell=True, text=True, capture_output=True)
+                            doReadPermission_output = doReadPermission.stdout
+                            doReadPermission_output = doReadPermission_output.strip()
+                            print(doReadPermission_output)
                         
-                        hardenedValue = re.match(regex, doReadPermission.stdout)
-                        # printing match object 
-                        #print(hardenedValue) # span=(0,22)
-                        # span=(start, end)
-                        #print(hardenedValue.start()) #
-                        if hardenedValue.start() == 0:
-                            print(Fore.YELLOW + "\nHardening for /boot/grub/grub.cfg has succeeded!\n")
+                            hardenedValue = re.match(regex, doReadPermission_output)
+
+                            if hardenedValue.start() == 0:
+                                print(Fore.YELLOW + "\nHardening for /boot/grub/grub.cfg has succeeded!\n")
+                            else:
+                                print(Fore.RED + "\nFailed to harden /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
                         else:
-                            print(Fore.RED + "\nFailed to harden /boot/grub/grub.cfg...\nMake sure you're running this script as root & try again...\n")
+                            print(Fore.RED + "\nFailed to chgrp root /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
                     else:
-                        print(Fore.RED + "\nFailed to chgrp root /boot/grub/grub.cfg...\nMake sure you're running this script as root & try again...\n")
+                        print(Fore.RED + "\nFailed to chown root /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
                 else:
-                    print(Fore.RED + "\nFailed to chown root /boot/grub/grub.cfg...\nMake sure you're running this script as root & try again...\n")
-                
-            else:
-                print(Fore.RED + "\nFailed to chmod 600 /boot/grub/grub.cfg...\nMake sure you're running this script as root & try again...\n")
+                    print(Fore.RED + "\nFailed to chmod 600 /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+            else:                
+                print(Fore.YELLOW + "\nCurrent config is compliant...\nSkipping hardening...\n")
         
         else:
             print(Fore.RED + "\ngrub.cfg does NOT exist in /boot/grub/\nProceeding to attempt for /boot/grub2/grub.cfg ...\n")
