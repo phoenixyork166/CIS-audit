@@ -9,7 +9,7 @@ import re
 # 3.3.3 Grub
 
 def verifyBootGrub():
-    confirm = input(Fore.WHITE + "\n[x] Do you wanna harden 3.3.3 Boot Options for either of following: \n/boot/grub/grub.cfg\n/boot/grub2/grub.cfg\n/boot/grub/menu.lst\n[x] [y/N]: ")
+    confirm = input(Fore.WHITE + "\n[x] Do you wanna check 3.3.3 Boot Options for either of following: \n/boot/grub/grub.cfg\n/boot/grub2/grub.cfg\n/boot/grub/menu.lst\n[x] [y/N]: ")
     if confirm.lower() == "y":
         print(Fore.WHITE + "\nProceeding...\n")
         user = input(Fore.WHITE + "Running this script as: ")    
@@ -46,7 +46,7 @@ def verifyBootGrub():
             print(Fore.YELLOW + "\nComparing current config to desired config...\n")
             
             if not validate:
-                print(Fore.RED + "\nCurrent config is NOT compliant...\nProceeding to hardening...\n")
+                print(Fore.RED + "\nCurrent config is NOT compliant...\nProceeding to remediate...\n")
                 ##
                 print(Fore.YELLOW + "\nchmod 600 /boot/grub/grub.cfg in progress...\n")
                 grubChmod600 = f'echo {sudo_password} | sudo chmod 600 {grubConfPath}'
@@ -77,9 +77,9 @@ def verifyBootGrub():
                             hardenedValue = re.match(regex, doReadPermission_output)
 
                             if hardenedValue.start() == 0:
-                                print(Fore.YELLOW + "\nHardening for /boot/grub/grub.cfg has succeeded!\n")
+                                print(Fore.WHITE + "\nRemediation for /boot/grub/grub.cfg has succeeded!\n")
                             else:
-                                print(Fore.RED + "\nFailed to harden /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                                print(Fore.RED + "\nFailed to remediate /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
                         else:
                             print(Fore.RED + "\nFailed to chgrp root /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
                     else:
@@ -87,7 +87,7 @@ def verifyBootGrub():
                 else:
                     print(Fore.RED + "\nFailed to chmod 600 /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
             else:                
-                print(Fore.YELLOW + "\nCurrent config is compliant...\nSkipping hardening...\n")
+                print(Fore.YELLOW + "\nCurrent config is compliant...\nSkipping remediation...\n")
         
         else:
             print(Fore.RED + "\ngrub.cfg does NOT exist in /boot/grub/\nProceeding to attempt for /boot/grub2/grub.cfg ...\n")
@@ -103,56 +103,73 @@ def verifyBootGrub():
             doLsGrub2 = subprocess.Popen(ls2Grub, shell=True, text=True)
             doLsGrub2.wait()
 
-            # if /boot/grub2/grub.cfg is located
+            # if /boot/grub2/grub.cfg can be located
             if doLsGrub2.returncode == 0:
-                print(Fore.YELLOW + "\ngrub.cfg exists in /boot/grub2/\nProceeding to hardening...\n")
-                # Hardening /boot/grub2/grub.cfg
-                grub2Chmod600 = f'echo {sudo_password} | sudo chmod 600 {grub2ConfPath}'
-                doGrub2Chmod600 = subprocess.Popen(grub2Chmod600, shell=True, text=True)
-                doGrub2Chmod600.wait()
+                print(Fore.YELLOW + "\ngrub.cfg exists in /boot/grub2/\nProceeding to checking...\n")
+                ##
+                check2 = f'echo {sudo_password} | sudo ls -la {grub2Path} | grep {grub2CfgName} | awk \'{{print $1,$2,$3,$4}}\''
+                doCheck2 = subprocess.run(check2, shell=True, text=True, capture_output=True)
+                #print(doCheck.stdout)
+                # Store output from doCheck stdout
+                output2 = doCheck2.stdout
+                # Trim whitespace
+                output2 = output2.strip()
+                print(output2)
 
-                if doGrub2Chmod600.returncode == 0:
-                    print(Fore.YELLOW + "\nchmod 600 /boot/grub2/grub.cfg has succeeded!\nProceeding to chown root /boot/grub2/grub.cfg\n")
-                    ## chown root /boot/grub/grub.cfg
-                    grub2Chown = f'echo {sudo_password} | sudo chown root {grub2ConfPath}'
-                    doGrub2Chown = subprocess.Popen(grub2Chown, shell=True, text=True)
-                    doGrub2Chown.wait()
-
-                    if doGrub2Chown.returncode == 0:
-                        print(Fore.YELLOW + "\nchown root /boot/grub2/grub.cfg has succeeded!\nProceeding to chgrp root /boot/grub2/grub.cfg\n")
-                        ### chgrp root /boot/grub2/grub.cfg
-                        grub2Chgrp = f'echo {sudo_password} | sudo chgrp root {grub2ConfPath}'
-                        doGrub2Chgrp = subprocess.Popen(grub2Chgrp, shell=True, text=True)
-                        doGrub2Chgrp.wait()
-
-                        if doGrub2Chgrp.returncode == 0:
-                            print(Fore.YELLOW + "\nchgrp root /boot/grub2/grub.cfg has succeeded!\nProceeding to verify latest permissions for /boot/grub2/grub.cfg: ")
-                            ##
-                            print(Fore.YELLOW + "\nLatest /boot/grub2/grub.cfg permissions are: ")
-                            #newPermission = os.system('ls -la /boot/grub/ | grep grub.cfg | awk \'{{print $1,$2,$3,$4}}\''.format(user))
-                            readPermission2 = f'echo {sudo_password} | sudo ls -la {grub2Path} | grep {grub2CfgName} | awk \'{{print $1,$2,$3,$4}}\''
-                            doReadPermission2 = subprocess.run(readPermission2, shell=True, text=True, capture_output=True)
-                            print(doReadPermission2.stdout)
-                            
-                            hardenedValue2 = re.match(regex, doReadPermission2.stdout)
-                            # printing match object 
-                            #print(hardenedValue2) # span=(0,22)
-                            # span=(start, end)
-                            #print(hardenedValue2.start()) #
-                            if hardenedValue2.start() == 0:
-                                print(Fore.YELLOW + "\nCIS 3.3.3 Hardening for /boot/grub2/grub.cfg has succeeded!\n")
-                            else:
-                                print(Fore.RED + "\nFailed to harden /boot/grub2/grub.cfg...\nMake sure you're running this script as root & try again...\n")
-                        
-                        else:
-                            print(Fore.RED + "\nFailed to chgrp root /boot/grub2/grub.cfg...\nMake sure you're running this script as root & try again...\n")
-
-                    else:
-                        print(Fore.RED + "\nFailed to chown root /boot/grub2/grub.cfg...\nMake sure you're running this script as root & try again...\n")
-                
-                else:
-                    print(Fore.RED + "\nFailed to chmod 600 /boot/grub2/grub.cfg...\nMake sure you're running this script as root & try again...\n")
+                validate2 = re.search(regex, output2)
+                print(validate2)
             
+                print(Fore.YELLOW + "\nComparing current config to desired config...\n")
+            
+                if not validate2:
+                    print(Fore.RED + "\nCurrent /boot/grub2/grub.cfg config is NOT compliant...\nProceeding to remediaton...\n")
+                    ##
+                    print(Fore.YELLOW + "\nchmod 600 /boot/grub2/grub.cfg in progress...\n")
+                    grub2Chmod600 = f'echo {sudo_password} | sudo chmod 600 {grub2ConfPath}'
+                    doGrub2Chmod600 = subprocess.Popen(grub2Chmod600, shell=True, text=True)
+                    doGrub2Chmod600.wait()
+
+                    if doGrub2Chmod600.returncode == 0:
+                        print(Fore.YELLOW + "\nchmod 600 /boot/grub2/grub.cfg has succeeded!\nProceeding to chown root /boot/grub2/grub.cfg ...\n")
+                        grub2Chown = f'echo {sudo_password} | sudo chown root {grub2ConfPath}'
+                        doGrub2Chown = subprocess.Popen(grub2Chown, shell=True, text=True)
+                        doGrub2Chown.wait()
+
+                        if doGrub2Chown.returncode == 0:
+                            print(Fore.YELLOW + "\nchown root /boot/grub2/grub.cfg has succeeded!\nProceeding to chgrp root /boot/grub2/grub.cfg\n")
+                            grub2Chgrp = f'echo {sudo_password} | sudo chgrp root {grub2ConfPath}'
+                            doGrub2Chgrp = subprocess.Popen(grubChgrp, shell=True, text=True)
+                            doGrub2Chgrp.wait()
+
+                            if doGrub2Chgrp.returncode == 0:
+                                print(Fore.YELLOW + "\nchgrp root /boot/grub2/grub.cfg has succeeded!\nProceeding to verify latest permissions for /boot/grub2/grub.cfg: ")
+                                print(Fore.YELLOW + "\nLatest /boot/grub2/grub.cfg permissions are: ")
+                                readPermission2 = f'echo {sudo_password} | sudo ls -la {grub2Path} | grep {grub2CfgName} | awk \'{{print $1,$2,$3,$4}}\''
+                                doReadPermission2 = subprocess.run(readPermission2, shell=True, text=True, capture_output=True)
+                                doReadPermission2_output = doReadPermission2.stdout
+                                # Trim whitespace
+                                doReadPermission2_output = doReadPermission2_output.strip()
+                                print(doReadPermission2_output)
+                        
+                                hardenedValue2 = re.match(regex, doReadPermission2_output)
+
+                                if hardenedValue2.start() == 0:
+                                    print(Fore.WHITE + "\nRemediation for /boot/grub2/grub.cfg has succeeded!\n")
+                                else:
+                                    print(Fore.RED + "\nFailed to remediate /boot/grub2/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                            else:
+                                print(Fore.RED + "\nFailed to chgrp root /boot/grub2/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                        else:
+                            print(Fore.RED + "\nFailed to chown root /boot/grub2/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                    else:
+                        print(Fore.RED + "\nFailed to chmod 600 /boot/grub2/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                else:                
+                    print(Fore.YELLOW + "\nCurrent config /boot/grub2/grub.cfg is compliant...\nSkipping remediation...\n")
+            
+            # if 
+            # /boot/grub/grub.cfg
+            # /boot/grub2/grub.cfg 
+            # both cannot be located
             else:
                 print(Fore.RED + "\nFailed to locate : \n/boot/grub/grub.cfg\nOR\n/boot/grub2/grub.cfg\nProceeding to last attempt for /boot/grub/menu.lst...")
                 # menu.lst
@@ -167,56 +184,70 @@ def verifyBootGrub():
                 doLsMenu.wait()
 
                 if doLsMenu.returncode == 0:
-                    print(Fore.YELLOW + "\nmenu.lst exists in /boot/grub/\nProceeding to hardening...\n")
-                    # Hardening /boot/grub/menu.lst
-                    menuChmod600 = f'echo {sudo_password} | sudo chmod 600 {menuLstPath}'
-                    doMenuChmod600 = subprocess.Popen(menuChmod600, shell=True, text=True)
-                    doMenuChmod600.wait()
+                    print(Fore.YELLOW + "\nmenu.lst has been located in /boot/grub/\nProceeding to checking...\n")
+                    ##
+                    check3 = f'echo {sudo_password} | sudo ls -la {menuPath} | grep {menuLstName} | awk \'{{print $1,$2,$3,$4}}\''
+                    doCheck3 = subprocess.run(check3, shell=True, text=True, capture_output=True)
+                    #print(doCheck3.stdout)
+                    # Store output from doCheck3 stdout
+                    output3 = doCheck3.stdout
+                    # Trim whitespace
+                    output3 = output3.strip()
+                    print(output3)
 
-                    if doMenuChmod600.returncode == 0:
-                        print(Fore.YELLOW + "\nchmod 600 /boot/grub/menu.lst has succeeded!\nProceeding to chown root /boot/grub/menu.lst\n")
-                        ## chown root /boot/grub/menu.lst
-                        menuChown = f'echo {sudo_password} | sudo chown root {menuLstPath}'
-                        doMenuChown = subprocess.Popen(menuChown, shell=True, text=True)
-                        doMenuChown.wait()
+                    validate3 = re.search(regex, output3)
+                    print(validate3)
+            
+                    print(Fore.YELLOW + "\nComparing current /boot/grub/menu.lst config to desired config...\n")
+            
+                    if not validate3:
+                        print(Fore.RED + "\nCurrent /boot/grub/menu.lst config is NOT compliant...\nProceeding to remediation...\n")
+                        ##
+                        print(Fore.YELLOW + "\nchmod 600 /boot/grub/menu.lst in progress...\n")
+                        menuLstChmod600 = f'echo {sudo_password} | sudo chmod 600 {menuLstPath}'
+                        doMenuLstChmod600 = subprocess.Popen(menuLstChmod600, shell=True, text=True)
+                        doMenuLstChmod600.wait()
 
-                        if doMenuChown.returncode == 0:
-                            print(Fore.YELLOW + "\nchown root /boot/grub/menu.lst has succeeded!\nProceeding to chgrp root /boot/grub/menu.lst\n")
-                            ## chgrp root /boot/grub/menu.lst
-                            menuChgrp = f'echo {sudo_password} | sudo chgrp root {menuLstPath}'
-                            doMenuChgrp = subprocess.Popen(menuChgrp, shell=True, text=True)
-                            doMenuChgrp.wait()
+                        if doMenuLstChmod600.returncode == 0:
+                            print(Fore.YELLOW + "\nchmod 600 /boot/grub/menu.lst has succeeded!\nProceeding to chown root /boot/grub/menu.lst ...\n")
+                            menuLstChown = f'echo {sudo_password} | sudo chown root {menuLstPath}'
+                            doMenuLstChown = subprocess.Popen(menuLstChown, shell=True, text=True)
+                            doMenuLstChown.wait()
 
-                            if doMenuChgrp.returncode == 0:
-                                ##
-                                print(Fore.YELLOW + "\nchgrp root /boot/grub/menu.lst has succeeded!\nProceeding to verify latest permissions for /boot/grub/menu.lst: ")
-                                ##
-                                print(Fore.YELLOW + "\nLatest /boot/grub/menu.lst permissions are: ")
-                                #newPermission = os.system('ls -la /boot/grub/ | grep grub.cfg | awk \'{{print $1,$2,$3,$4}}\''.format(user))
-                                readPermission3 = f'echo {sudo_password} | sudo ls -la {menuPath} | grep {menuLstName} | awk \'{{print $1,$2,$3,$4}}\''
-                                doReadPermission3 = subprocess.run(readPermission3, shell=True, text=True, capture_output=True)
-                                print(doReadPermission3.stdout)
-                                
-                                hardenedValue3 = re.match(regex, doReadPermission3.stdout)
-                                # printing match object 
-                                #print(hardenedValue) # span=(0,22)
-                                # span=(start, end)
-                                #print(hardenedValue.start()) #
-                                if hardenedValue3.start() == 0:
-                                    print(Fore.YELLOW + "\nHardening for /boot/grub/menu.lst has succeeded!\n")
+                            if doMenuLstChown.returncode == 0:
+                                print(Fore.YELLOW + "\nchown root /boot/grub/menu.lst has succeeded!\nProceeding to chgrp root /boot/grub/menu.lst\n")
+                                menuLstChgrp = f'echo {sudo_password} | sudo chgrp root {menuLstPath}'
+                                doMenuLstChgrp = subprocess.Popen(menuLstChgrp, shell=True, text=True)
+                                doMenuLstChgrp.wait()
+
+                                if doMenuLstChgrp.returncode == 0:
+                                    print(Fore.YELLOW + "\nchgrp root /boot/grub/menu.lst has succeeded!\nProceeding to verify latest permissions for /boot/grub/menu.lst: ")
+                                    print(Fore.YELLOW + "\nLatest /boot/grub/menu.lst permissions are: ")
+                                    readPermission3 = f'echo {sudo_password} | sudo ls -la {menuPath} | grep {menuLstName} | awk \'{{print $1,$2,$3,$4}}\''
+                                    doReadPermission3 = subprocess.run(readPermission3, shell=True, text=True, capture_output=True)
+                                    doReadPermission3_output = doReadPermission3.stdout
+                                    doReadPermission3_output = doReadPermission3_output.strip()
+                                    print(doReadPermission3_output)
+                        
+                                    hardenedValue3 = re.match(regex, doReadPermission3_output)
+
+                                    if hardenedValue3.start() == 0:
+                                        print(Fore.YELLOW + "\nRemediation for /boot/grub/menu.lst has succeeded!\n")
+                                    else:
+                                        print(Fore.RED + "\nFailed to harden /boot/grub/menu.lst...\nEnsure you entered a correct sudo password & try again...\n")
                                 else:
-                                    print(Fore.RED + "\nFailed to harden /boot/grub/menu.lst...\nMake sure you're running this script as root & try again...\n")
-                                ##
+                                    print(Fore.RED + "\nFailed to chgrp root /boot/grub/menu.lst...\nEnsure you entered a correct sudo password & try again...\n")
                             else:
-                                print(Fore.RED + "\nFailed to chgrp root /boot/grub/menu.lst...\nMake sure you're running this script as root & try again...\n")
+                                print(Fore.RED + "\nFailed to chown root /boot/grub/menu.lst...\nEnsure you entered a correct sudo password & try again...\n")
                         else:
-                            print(Fore.RED + "\nFailed to chown root /boot/grub/menu.lst...\nMake sure you're running this script as root & try again...\n")
-                    else:
-                        print(Fore.RED + "\nFailed to chmod 600 /boot/grub/menu.lst...\nMake sure you're running this script as root & try again...\n")
+                            print(Fore.RED + "\nFailed to chmod 600 /boot/grub/menu.lst...\nEnsure you entered a correct sudo password & try again...\n")
+                    else:                
+                        print(Fore.YELLOW + "\nCurrent /boot/grub/menu.lst config is compliant...\nSkipping remediation...\n")
+                    ##
                 else:
-                    print(Fore.RED + "\nCould not find any of following: \n/boot/grub2/grub.cfg\n/boot/grub/grub.cfg\n/boot/grub/menu.lst\nSkipping to harden 3.3.3 Boot Options...\n")
+                    print(Fore.RED + "\nCould not find any of following: \n/boot/grub2/grub.cfg\n/boot/grub/grub.cfg\n/boot/grub/menu.lst\nSkipping to remediate 3.3.3 Boot Options...\n")
     else:
-        print(Fore.WHITE + "\nNot gonna harden 3.3.3 Boot Options...\nSkipping...\n")
+        print(Fore.WHITE + "\nNot gonna check 3.3.3 Boot Options...\nSkipping...\n")
 
 
 
