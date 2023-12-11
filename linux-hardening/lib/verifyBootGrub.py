@@ -32,7 +32,7 @@ def verifyBootGrub():
 
                     ###
                     if not validate:
-                        print(Fore.RED + "\nCurrent config is NOT compliant...\nProceeding to remediate...\n")
+                        print(Fore.RED + f'\nCurrent config: {prefix}{config} is NOT compliant...\nProceeding to remediate...\n')
                         ##
                         print(Fore.YELLOW + f'\nchmod 600 {prefix}{config} in progress...\n')
                         grubChmod600 = f'echo {sudo_password} | sudo chmod 600 {prefix}{config}'
@@ -63,20 +63,20 @@ def verifyBootGrub():
                                     hardenedValue = re.match(regex, doReadPermission_output)
 
                                     if hardenedValue.start() == 0:
-                                        print(Fore.WHITE + "\nRemediation for /boot/grub/grub.cfg has succeeded!\n")
+                                        print(Fore.WHITE + f'\nRemediation for {prefix}{config} has succeeded!\n')
                                     else:
-                                        print(Fore.RED + "\nFailed to remediate /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                                        print(Fore.RED + f'\nFailed to remediate {prefix}{config}...\nMake sure you\'re root & try again...\n')
                                 else:
-                                    print(Fore.RED + "\nFailed to chgrp root /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                                    print(Fore.RED + f'\nFailed to chgrp root {prefix}{config}...\nMake sure you\'re root & try again...\n')
                             else:
-                                print(Fore.RED + "\nFailed to chown root /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                                print(Fore.RED + f'\nFailed to chown root {prefix}{config}...\nMake sure you\'re root & try again...\n')
                         else:
-                            print(Fore.RED + "\nFailed to chmod 600 /boot/grub/grub.cfg...\nEnsure you entered a correct sudo password & try again...\n")
+                            print(Fore.RED + f'\nFailed to chmod 600 {prefix}{config}...\nMake sure you\'re root & try again...\n')
                     else:                
-                        print(Fore.YELLOW + "\nCurrent config is compliant...\nSkipping remediation...\n")
+                        print(Fore.YELLOW + f'\nCurrent config: {prefix}{config} is compliant...\nSkipping remediation...\n')
                     ###
                 else:
-                    print(Fore.RED + f"\nFailed to locate {config} in {prefix}...\nSkipping...\n")
+                    print(Fore.RED + f'\nFailed to locate {config} in {prefix}...\nSkipping...\n')
     else:
         print(Fore.RED + "You aren't ROOT\nTerminating...\n")
 

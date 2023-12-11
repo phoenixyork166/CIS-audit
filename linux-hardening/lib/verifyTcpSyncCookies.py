@@ -19,6 +19,7 @@ def verifyTcpSyncCookies():
         confName = 'sysctl.conf'
         confPath = f'{prefix}{confName}'        
         hardenedValue = 'net.ipv4.tcp_syncookies=1'
+        regex = "^\s*net\.ipv4\.tcp\_syncookies\s*=\s*1$"
         # print(Fore.WHITE + "\nHardened value as below: \n")
         # print(hardenedValue)
 
@@ -30,7 +31,7 @@ def verifyTcpSyncCookies():
         if doLsSysctlConf.returncode == 0:
             print(Fore.YELLOW + "\nLocating kernel configuration file /etc/sysctl.conf succeeded!\nProceeding to check current config...\n")
 
-            readConf = f"echo {sudo_password} | sudo cat {confPath} | egrep '^\S*\s*net\.ipv4\.tcp\_syncookies\s*\=\s*\d*\s*'"
+            readConf = f"echo {sudo_password} | sudo cat {confPath} | egrep '^\S*\s*net\.ipv4\.tcp\_syncookies\s*'"
             doReadConf = subprocess.run(readConf, shell=True, text=True, capture_output=True)
             # Storing doReadConf standard output into another variable 'output'
             output = doReadConf.stdout
@@ -44,11 +45,11 @@ def verifyTcpSyncCookies():
                 if output == hardenedValue:
                     print(Fore.YELLOW + "\nCurrent net.ipv4.tcp_syncookies value is compliant...\nSkipping...\n")
                 else:
-                    print(Fore.YELLOW + "\nDesired config value is: \n")
-                    print(hardenedValue)
-                    print(Fore.YELLOW + "\nCurrent value is: \n")
-                    print(output)
-                    print(Fore.YELLOW + "\nCurrent net.ipv4.tcp_syncookies value is NOT compliant...\nProceeding to remediate...\n")
+                    print(Fore.RED + "\nCurrent net.ipv4.tcp_syncookies value is NOT compliant...\nProceeding to remediate...\n")
+                    print(Fore.RED + "\nDesired config value is: \n")
+                    print(Fore.YELLOW + hardenedValue)
+                    print(Fore.RED + "\nCurrent value is: \n")
+                    print(Fore.YELLOW + output)
 
                     remediate = f"echo {sudo_password} | sudo sed -i 's/{output}/{hardenedValue}/g' {confPath};"
                     doRemediate = subprocess.run(remediate, shell=True, text=True, capture_output=True)
@@ -56,7 +57,7 @@ def verifyTcpSyncCookies():
 
                     if doRemediate.returncode == 0:
                         print(Fore.YELLOW + "\nRemediation for setting kernel config /etc/sysctl.conf\nnet.ipv4.tcp_syncookies=1\nhas succeeded!\nProceeding to check against desired value...\n")
-                        check = f"echo {sudo_password} | sudo cat {confPath} | egrep '^\S*\s*net\.ipv4\.tcp\_syncookies\s*\=\s*\d*\s*'"
+                        check = f"echo {sudo_password} | sudo cat {confPath} | egrep '^\S*\s*net\.ipv4\.tcp\_syncookies\s*'"
                         doCheck = subprocess.run(check, shell=True, text=True, capture_output=True)
                         output2 = doCheck.stdout
                         output2 = output2.strip()
@@ -66,9 +67,9 @@ def verifyTcpSyncCookies():
                         if output2 == hardenedValue:
                             print(Fore.WHITE + "\nCurrent net.ipv4.tcp_syncookies has become compliant!\nRemediation for 3.9.1.1 Verify TCP SYNC Cookies Protection is Enabled\nnet.ipv4.tcp_syncookies=1\nhas succeeded!\n")
                         else:
-                            print(Fore.RED + "\nFailed to remediate net.ipv4.tcp_syncookies value...\nMake sure correct sudo password is entered & try again...\n")
+                            print(Fore.RED + "\nFailed to remediate net.ipv4.tcp_syncookies value...\nMake sure you're root & try again...\n")
                     else:
-                        print(Fore.RED + "\nFailed to remediate kernel config /etc/sysctl.conf\nnet.ipv4.tcp_syncookies=1\nMake sure correct sudo password is entered & try again...\n")
+                        print(Fore.RED + "\nFailed to remediate kernel config /etc/sysctl.conf\nnet.ipv4.tcp_syncookies=1\nMake sure you're root & try again...\n")
 
             else:
                 print(Fore.RED + "\nFailed to check current net.ipv4.tcp_syncookies config...\nMake sure you're running this script as root & try again...\n")
@@ -77,4 +78,4 @@ def verifyTcpSyncCookies():
             print(Fore.RED + "\nFailed to locate /etc/sysctl.conf...\nMake sure you're running this script as root & try again...\n")
 
     else:
-        print(Fore.WHITE + "\nNot gonna harden 3.9.1.1 TCP Sync Cookies Protection in /etc/sysctl.conf...\nSkipping...\n")
+        print(Fore.RED + "\nYou aren't ROOT...\nSkipping to verify /etc/systemctl.conf for verifyTcpSyncCookies...\n")

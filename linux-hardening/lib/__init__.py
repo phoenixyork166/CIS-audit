@@ -35,7 +35,7 @@ def initializeModules():
 def getCredentials():
     try:
         print(Fore.WHITE + "\nProceeding...\n")
-        user = input(Fore.WHITE + "Running this script as: ")
+        user = input(Fore.WHITE + "Running this script as root: ")
         sudo_password = getpass.getpass(prompt='Enter sudo password: ')
         return user, sudo_password
     except Exception as e:
