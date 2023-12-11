@@ -1,8 +1,4 @@
-import os
-from colorama import Fore, Back, Style
-import subprocess
-import getpass
-import re
+from . import user, sudo_password, distroName, initializeModules, Fore, os, Back, Style, getpass, subprocess, re
 
 # 3.9 Security Features in the Kernel
 # 3.9.1 Enable TCP SYN Cookie Protection (default in SUSE Linux Enterprise Server11)
@@ -17,21 +13,17 @@ import re
 # config = cat /etc/sysctl.conf | egrep '^net.ipv4.tcp\_syncookies'
 
 def verifyTcpSyncCookies():
-    confirm = input(Fore.WHITE + "\n[x] Do you wanna check 3.9.1.1 TCP Sync Cookies Protection in /etc/sysctl.conf[x] [y/N]: ")
-    if confirm.lower() == "y":
-        print(Fore.WHITE + "\nProceeding...\n")
-        user = input(Fore.WHITE + "Running this script as: ")    
-        sudo_password = getpass.getpass(prompt='Enter sudo password: ')
-
-        kernelPath = '/etc/'
-        confPath = '/etc/sysctl.conf'
+    
+    if user.lower() == "root":
+        prefix = '/etc/'
         confName = 'sysctl.conf'
+        confPath = f'{prefix}{confName}'        
         hardenedValue = 'net.ipv4.tcp_syncookies=1'
         # print(Fore.WHITE + "\nHardened value as below: \n")
         # print(hardenedValue)
 
         print(Fore.YELLOW + "\nLocating kernel configuration file /etc/sysctl.conf...\n")
-        lsSysctlConf = f'echo {sudo_password} | sudo ls -la {kernelPath} | grep {confName}'
+        lsSysctlConf = f'echo {sudo_password} | sudo ls -la {prefix} | grep {confName}'
         doLsSysctlConf = subprocess.Popen(lsSysctlConf, shell=True, text=True)
         doLsSysctlConf.wait()
         # if /etc/sysctl.conf can be located

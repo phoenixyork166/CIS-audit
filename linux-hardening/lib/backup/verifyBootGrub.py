@@ -1,19 +1,19 @@
 import os
 from colorama import Fore, Back, Style
 import subprocess
-import getpass
 import re
+from . import user, sudo_password, distroName
 
-# 3. Linux Security in "General"
+# Linux Security in "General"
 # 3.3 Boot Options
 # 3.3.3 Grub
-
 def verifyBootGrub():
-    confirm = input(Fore.WHITE + "\n[x] Do you wanna check 3.3.3 Boot Options for either of following: \n/boot/grub/grub.cfg\n/boot/grub2/grub.cfg\n/boot/grub/menu.lst\n[x] [y/N]: ")
-    if confirm.lower() == "y":
-        print(Fore.WHITE + "\nProceeding...\n")
-        user = input(Fore.WHITE + "Running this script as: ")    
-        sudo_password = getpass.getpass(prompt='Enter sudo password: ')
+    #confirm = input(Fore.WHITE + "\n[x] Do you wanna check 3.3.3 Boot Options for either of following: \n/boot/grub/grub.cfg\n/boot/grub2/grub.cfg\n/boot/grub/menu.lst\n[x] [y/N]: ")
+    if user.lower() == "root":
+        print(Fore.WHITE + "\nConfirmed you're ROOT\nProceeding...\n")
+        
+        prefixes = ['/boot/grub/', '/boot/efi/EFI/{distroName}/', '/boot/grub2/', '/etc/']
+        configs = ['grub2.cfg', 'menu.lst', 'grub2.cfg']
         
         regex = "^-rw-------\s+\d+\s+root\s+root$"
         #hardenedValue = re.search("(-rw-------)\s+\d+\s+(root)\user = input(Fore.WHITE + "Running this script as: ")    
@@ -100,7 +100,7 @@ def verifyBootGrub():
             # Try listing /boot/grub2/ 
             # If listing /boot/grub2/ failed...
             lsGrub2 = f'echo {sudo_password} | sudo ls -la {grub2Path}'
-            doLsGrub2 = subprocess.Popen(ls2Grub, shell=True, text=True)
+            doLsGrub2 = subprocess.Popen(lsGrub2, shell=True, text=True)
             doLsGrub2.wait()
 
             # if /boot/grub2/grub.cfg can be located
@@ -247,7 +247,7 @@ def verifyBootGrub():
                 else:
                     print(Fore.RED + "\nCould not find any of following: \n/boot/grub2/grub.cfg\n/boot/grub/grub.cfg\n/boot/grub/menu.lst\nSkipping to remediate 3.3.3 Boot Options...\n")
     else:
-        print(Fore.WHITE + "\nNot gonna check 3.3.3 Boot Options...\nSkipping...\n")
+        print(Fore.WHITE + "Not ROOT\nNot gonna check 3.3.3 Boot Options...\nSkipping...\n")
 
 
 
