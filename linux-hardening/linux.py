@@ -31,19 +31,27 @@ sys.path.append(os.path.abspath("/home/phoenix/Desktop/tools/CIS-audit/linux-har
 #user = input(Fore.WHITE + 'Running this script as: ')
 #echo_password = getpass.getpass(prompt='Enter your echo password: ')
 
-# 3. Linux Security
-# 3.3 Boot options
-# 3.3.3 Grub
+# Linux Security
+# 1. Boot options
+# Verify Boot Grub
 from lib.verifyBootGrub import verifyBootGrub
 verifyBootGrub()
 
-# 3.9 Security Features in the Kernel
+# 2. Verify NIS Server
+# Verify NIS Server services ypserv is disabled
+from lib.verifyNIS import verifyNIS
+verifyNIS()
+
+# 3. Security Features in the Kernel
 # 3.9.1 Enable TCP SYN Cookie Protection (default in SUSE Linux Enterprise Server11)
 # 3.9.1.1 Verify TCP SYNC Cookie Protection is Enabled
 # config = cat /etc/sysctl.conf | egrep '^\s*net\.ipv4\.tcp\_syncookies\s*=\s*(\d*)\s*'
 #from lib.verifyTcpSyncCookies import verifyTcpSyncCookies
 from lib.verifyTcpSyncCookies import verifyTcpSyncCookies
 verifyTcpSyncCookies()
+
+# 3.12.1 Verify TFTP service is disabled
+
 
 
 
