@@ -1,2 +1,2 @@
-## Blue teaming with CIS-audit
+## Cybersecurity Blue teaming with CIS-audit
 ![CIS audits](https://res.cloudinary.com/teepublic/image/private/s--tJrQftmz--/t_Resized%20Artwork/c_fit,g_north_west,h_954,w_954/co_000000,e_outline:48/co_000000,e_outline:inner_fill:48/co_ffffff,e_outline:48/co_ffffff,e_outline:inner_fill:48/co_bbbbbb,e_outline:3:1000/c_mpad,g_center,h_1260,w_1260/b_rgb:eeeeee/t_watermark_lock/c_limit,f_auto,h_630,q_auto:good:420,w_630/v1588510052/production/designs/9748183_0.jpg)
